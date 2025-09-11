@@ -6,6 +6,85 @@ import 'package:flutter_libserialport/flutter_libserialport.dart';
 import 'package:window_size/window_size.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 
+class FunctionComboBox extends StatefulWidget {
+  final String value;
+  final bool disabled;
+  final ValueChanged<String> onChanged;
+  const FunctionComboBox({required this.value, required this.disabled, required this.onChanged, Key? key}) : super(key: key);
+
+  @override
+  State<FunctionComboBox> createState() => _FunctionComboBoxState();
+}
+
+class _FunctionComboBoxState extends State<FunctionComboBox> {
+  static const List<String> options = ['---','JTX', 'MOV', 'CentX', 'DiDi', 'Uber', 'SEIKO', 'PT-750'];
+  late String selectedValue;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedValue = widget.value;
+  }
+
+  @override
+  void didUpdateWidget(FunctionComboBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      selectedValue = widget.value;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 72,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.blueAccent, width: 2),
+          color: Colors.yellow[50],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: DropdownButton<String>(
+            value: selectedValue,
+            items: options.map((value) => DropdownMenuItem<String>(
+              value: value,
+              child: Center(
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: value == '---' ? Colors.grey :
+                      value == 'JTX' ? Colors.red :
+                      value == 'MOV' ? Colors.green :
+                      value == 'CentX' ? Colors.blue :
+                      value == 'DiDi' ? Colors.orange :
+                      value == 'Uber' ? Colors.purple :
+                      value == 'SEIKO' ? Colors.teal :
+                      value == 'PT-750' ? Colors.brown : Colors.black,
+                  ),
+                ),
+              ),
+            )).toList(),
+            onChanged: widget.disabled
+              ? null
+              : (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      selectedValue = newValue;
+                    });
+                    widget.onChanged(newValue);
+                  }
+                },
+            underline: SizedBox(),
+            dropdownColor: Colors.yellow[50],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setWindowFrame(const Rect.fromLTWH(100, 100, 800, 400)); // ウィンドウサイズのみ指定
@@ -173,8 +252,6 @@ class _ExampleAppState extends State<ExampleApp> {
                             DataCell(
                               Row(
                                 children: [
-                                  Text(rows[i][0], style: TextStyle(fontWeight: FontWeight.normal)),
-                                  SizedBox(width: 4),
                                   Builder(
                                     builder: (context) {
                                       final isRed = portStatusColor.length > i && portStatusColor[i] == Colors.red;
@@ -194,48 +271,47 @@ class _ExampleAppState extends State<ExampleApp> {
                                         btnBg = portStatusColor.length > i ? portStatusColor[i] : Colors.grey;
                                         btnFg = Colors.white;
                                       }
-                                      return ElevatedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            isOpenList[i] = !isOpenList[i];
-                                          });
-                                        },
-                                        child: Text(btnLabel, style: TextStyle(fontSize: 12)),
-                                        style: ElevatedButton.styleFrom(
-                                          minimumSize: Size(40, 24),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(2),
-                                          ),
-                                          padding: EdgeInsets.symmetric(horizontal: 2, vertical: 0),
-                                          backgroundColor: btnBg,
-                                          foregroundColor: btnFg,
-                                        ),
-                                      );
+                                       return Padding(
+                                         padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                         child: ElevatedButton(
+                                           onPressed: () {
+                                             setState(() {
+                                               isOpenList[i] = !isOpenList[i];
+                                             });
+                                           },
+                                           child: SizedBox(
+                                             width: 48,
+                                             child: Center(child: Text(btnLabel, style: TextStyle(fontSize: 12))),
+                                           ),
+                                           style: ElevatedButton.styleFrom(
+                                             minimumSize: Size(48, 24),
+                                             shape: RoundedRectangleBorder(
+                                               borderRadius: BorderRadius.circular(2),
+                                             ),
+                                             padding: EdgeInsets.symmetric(horizontal: 2, vertical: 0),
+                                             backgroundColor: btnBg,
+                                             foregroundColor: btnFg,
+                                           ),
+                                         ),
+                                       );
                                     },
                                   ),
                                   SizedBox(width: 4),
-                                  DropdownButton2<String>(
+                                      SizedBox(
+                                        width: 56,
+                                        child: Center(
+                                          child: Text(rows[i][0], style: TextStyle(fontWeight: FontWeight.normal)),
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      FunctionComboBox(
                                     value: selectedFunctionList.length > i ? selectedFunctionList[i] : '---',
-                                    items: <String>['---','JTX', 'MOV', 'CentX', 'DiDi', 'Uber', 'SEIKO', 'PT-750']
-                                        .map((String value) => DropdownMenuItem<String>(
-                                              value: value,
-                                              child: Container(
-                                                height: 18,
-                                                alignment: Alignment.centerLeft,
-                                                child: Text(value, style: TextStyle(fontSize: 12)),
-                                              ),
-                                            ))
-                                        .toList(),
-                                    onChanged: ((portStatusColor.length > i && portStatusColor[i] == Colors.red) || (isOpenList.length > i && isOpenList[i]))
-                                      ? null
-                                      : (String? newValue) {
-                                          if (newValue != null) {
-                                            setState(() {
-                                              selectedFunctionList[i] = newValue;
-                                            });
-                                          }
-                                        },
-                                    //dropdownMaxHeight: 400.0, // 400px分表示
+                                    disabled: (portStatusColor.length > i && portStatusColor[i] == Colors.red) || (isOpenList.length > i && isOpenList[i]),
+                                    onChanged: (newValue) {
+                                      setState(() {
+                                        selectedFunctionList[i] = newValue;
+                                      });
+                                    },
                                   ),
                                 ],
                               ),
