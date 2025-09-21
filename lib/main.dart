@@ -143,7 +143,25 @@ class _ExampleAppState extends State<ExampleApp> {
 
   void initPorts() {
     setState(() {
-      availablePorts = SerialPort.availablePorts..sort();
+      availablePorts = SerialPort.availablePorts;
+      // COMポートの数字部分を考慮したソート
+      availablePorts.sort((a, b) {
+        // COMポートかどうかを確認
+        final RegExp comRegex = RegExp(r'^COM(\d+)$');
+        final Match? matchA = comRegex.firstMatch(a);
+        final Match? matchB = comRegex.firstMatch(b);
+        
+        // 両方ともCOMポートの場合、数字で比較
+        if (matchA != null && matchB != null) {
+          final int numA = int.parse(matchA.group(1)!);
+          final int numB = int.parse(matchB.group(1)!);
+          return numA.compareTo(numB);
+        }
+        
+        // それ以外の場合は文字列として比較
+        return a.compareTo(b);
+      });
+      
       if (availablePorts.isNotEmpty) {
         selectedPort = availablePorts.first;
       }
